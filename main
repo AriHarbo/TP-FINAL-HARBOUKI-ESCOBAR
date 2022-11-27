@@ -1,0 +1,1056 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <stdbool.h>
+#define TAM_MAX 40
+
+typedef struct
+{
+    char nomEquipo[40];
+    int mp; ///partidos jugados
+    int gf;   ///goles a favor
+    int ga;  ///goles en contra
+    int win;  ///partidos ganados
+    int loss;  ///partidos perdidos
+    int pts;  ///puntos totales
+} Equipo;
+
+typedef struct nodoEquipo
+{
+    Equipo equipo;
+    struct nodoEquipo* siguiente;
+} nodoEquipo;
+
+typedef struct nodoGrupoEquipo
+{
+    Equipo* equipo;
+    struct nodoGrupoEquipo* siguiente;
+} nodoGrupoEquipo;
+
+typedef struct Grupo
+{
+    char letra; ///'A','B'....
+    struct nodoGrupoEquipo* equipos; ///siempre va a haber 4
+} Grupo;
+
+typedef struct Partido
+{
+    int id; ///opcional
+    int fecha; ///eligen ustedes el criterio, el tipo tambien
+    Equipo* equipo1;
+    Equipo* equipo2;
+    int golesEq1;
+    int golesEq2;
+    int penales1; ///en la fase de grupos no hay penales
+    int penales2; ///pueden setearlo en 1 y 0 (como un boolean)
+} Partido;
+
+typedef struct nodoPartido
+{
+    Partido partido;
+    struct nodoPartido* siguiente;
+} nodoPartido;
+
+typedef struct GrupoPartido
+{
+    char letra;
+    nodoPartido* partidos;
+} GrupoPartido;
+
+typedef struct
+{
+    int idFase;
+    nodoPartido* partidos;
+} fase;
+
+/*
+void mostrarArchivo(Equipo);
+void cargarArchivo(Equipo);
+*/
+
+///PROTOTIPADOS:
+void cargarLista(nodoEquipo**);
+nodoEquipo* crearNodoEquipo(Equipo);
+void insertarAlFinal(nodoEquipo**, Equipo);
+void mostrarEquipo(Equipo);
+void mostrarLista(nodoEquipo*);
+void cargarGrupos(Grupo[],nodoEquipo*,int);
+void mostrarArreglo(Grupo[]);
+void mostrarIndice(nodoGrupoEquipo*,int);
+nodoPartido* crearNodoPartido(Partido);
+nodoPartido* crearPartidoFaseDeGrupos1(nodoGrupoEquipo*, nodoGrupoEquipo*, int);
+nodoPartido* crearPartidoFaseDeGrupos2(nodoGrupoEquipo*, nodoGrupoEquipo*, int,char[],char);
+void jugarPartidosFaseDeGrupos1(Grupo[], GrupoPartido[]);
+void jugarPartidosFaseDeGrupos2(Grupo[], GrupoPartido[],char nombre[],char);
+void insertarAlFinalPartidos(nodoPartido** listaPartidos, nodoPartido* nuevo);
+void mostrarPartido(Partido);
+void mostrarPartidosGrupos(GrupoPartido[]);
+void actualizarGrupoAux(Partido);
+void actualizarGrupo(GrupoPartido[]);
+void averiguar1y2(Grupo[],Grupo[]);
+void insertarOrdenado(nodoGrupoEquipo**, Equipo*);
+void mostrarClasificados(Grupo[]);
+void mostrarPartidoFases(Partido);
+nodoPartido* crearPartidoFases(nodoGrupoEquipo*, nodoGrupoEquipo*);
+void crearCrucesOctavos(Grupo[], fase[]);
+void mostrarPartidosFases(fase[],int);
+void crearCrucesCuartos(fase[]);
+void crearCrucesSemis(fase[]);
+void crearFinal(fase[]);
+void verCampeon (fase[]);
+
+int main()
+{
+    int opcion = 0;
+    srand(time(NULL));
+    nodoEquipo* listaSeleciones = NULL;
+    Grupo grupo[TAM_MAX];
+    Grupo grupoFinal[TAM_MAX];
+    for(int i=0; i<8; i++)
+    {
+        grupo[i].equipos=NULL;
+    }
+    for(int i=0; i<8; i++)
+    {
+        grupoFinal[i].equipos=NULL;
+    }
+    int validos=4;
+    cargarLista(&listaSeleciones);
+    //mostrarLista(listaSeleciones);
+    cargarGrupos(grupo,listaSeleciones,validos);
+    //mostrarArreglo(grupo);
+    GrupoPartido partidosFaseDeGrupos[8];
+    int validosPartidosFaseDeGrupos;
+    for(int j = 0; j<8; j++)
+    {
+        partidosFaseDeGrupos[j].partidos = NULL;
+        validosPartidosFaseDeGrupos = j;
+    }
+     fase fases[5];
+    for(int i = 0; i < 5; i++)
+    {
+    fases[i].partidos = NULL;
+    }
+
+    while(true)
+    {
+        printf("Ingrese un numero:\n");
+        printf("1.Ver estadisticas de los grupos\n");
+        printf("2.Realizar la simulacion de la fase de grupos\n");
+        printf("3.Realizar la simulacion de la fase de grupos y elegir un equipo para que pase o no\n");
+        printf("4.Realizar la simulacion de la fase final\n");
+        printf("5.Ver fases\n");
+        scanf("%i",&opcion);
+    switch(opcion)
+    {
+        case 1:
+            mostrarArreglo(grupo);
+            system ("PAUSE");
+            system ("cls");
+            break;
+        case 2:
+            if(grupo[0].equipos->equipo->mp == 3)
+            {
+                printf("La fase de grupos ya fue simulada\n");
+            }
+            else
+            {
+            jugarPartidosFaseDeGrupos1(grupo, partidosFaseDeGrupos);
+            mostrarPartidosGrupos(partidosFaseDeGrupos);
+            actualizarGrupo(partidosFaseDeGrupos);
+            printf("Fase de grupos simulada con exito.\n");
+            }
+            system ("PAUSE");
+            system ("cls");
+            break;
+        case 3:
+            if(grupo[0].equipos->equipo->mp == 3)
+            {
+                printf("La fase de grupos ya fue simulada\n");
+            }
+            else
+            {
+            char nombre[TAM_MAX];
+            char clasifica;
+            printf("Ingrese una seleccion:\n");
+            fflush(stdin);
+            gets(nombre);
+            printf("Quiere que la seleccion clasifique? s/n\n");
+            fflush(stdin);
+            scanf("%c",&clasifica);
+            jugarPartidosFaseDeGrupos2(grupo, partidosFaseDeGrupos,nombre,clasifica);
+            mostrarPartidosGrupos(partidosFaseDeGrupos);
+            actualizarGrupo(partidosFaseDeGrupos);
+            printf("Fase de grupos simulada con exito.\n");
+            system ("PAUSE");
+            system ("cls");
+            }
+            break;
+        case 4:
+        if(grupo[0].equipos->equipo->mp == 0)
+        {
+            printf("Para simular la fase final, primero debes simular la fase de grupos.\n");
+        }
+        else
+        {
+        averiguar1y2(grupo,grupoFinal);
+        mostrarClasificados(grupoFinal);
+        crearCrucesOctavos(grupoFinal, fases);
+        crearCrucesCuartos(fases);
+        crearCrucesSemis(fases);
+        crearFinal(fases);
+        }
+        system("PAUSE");
+        system("cls");
+        break;
+        case 5:
+            if(fases[0].partidos == NULL)
+            {
+                printf("Para ver la fase final, primero debes simularla\n");
+            }
+            else
+            {
+            int fase;
+            printf("Ingrese que fase quiere ver:\n");
+            printf("1.Octavos\n");
+            printf("2.Cuartos\n");
+            printf("3.Semis\n");
+            printf("4.Tercer y cuarto puesto\n");
+            printf("5.Final\n");
+            scanf("%d",&fase);
+            switch(fase)
+            {
+            case 1:
+                mostrarPartidosFases(fases,fase);
+                system ("PAUSE");
+                system ("cls");
+                break;
+            case 2:
+                mostrarPartidosFases(fases,fase);
+                system ("PAUSE");
+                system ("cls");
+                break;
+            case 3:
+                mostrarPartidosFases(fases,fase);
+                system ("PAUSE");
+                system ("cls");
+                break;
+            case 4:
+                mostrarPartidosFases(fases,fase);
+                system ("PAUSE");
+                system ("cls");
+                break;
+            case 5:
+                mostrarPartidosFases(fases,fase);
+                verCampeon(fases);
+                system ("PAUSE");
+                system ("cls");
+                break;
+            }
+            }
+            system ("PAUSE");
+            system ("cls");
+            break;
+    }
+        system ("PAUSE");
+        system ("cls");
+    }
+    return 0;
+}
+
+/*
+void mostrarArchivo(Equipo equipo)
+{
+    FILE* fp = fopen("Equipos.bin","rb");
+    if(fp)
+    {
+        while(fread(&equipo,sizeof(Equipo),1,fp) > 0)
+        {
+            printf("Equipo: %s\n",equipo.nomEquipo);
+            printf("Partidos jugados: %d\n",equipo.mp);
+            printf("Goles a favor: %d\n",equipo.gf);
+            printf("Goles en contra: %d\n",equipo.ga);
+            printf("Partidos ganados: %d\n",equipo.win);
+            printf("Partidos perdidos: %d\n",equipo.loss);
+            printf("Puntos totales: %d\n",equipo.pts);
+            printf("\n");
+        }
+    }
+}
+
+void cargarArchivo(Equipo equipo)
+{
+    FILE* fp = fopen("Equipos.bin","ab");
+    strcpy(equipo.nomEquipo,"Corea");
+    equipo.ga=0;
+    equipo.gf=0;
+    equipo.loss=0;
+    equipo.mp=0;
+    equipo.pts=0;
+    equipo.win=0;
+    fwrite(&equipo,sizeof(Equipo),1,fp);
+}
+*/
+
+nodoEquipo* crearNodoEquipo(Equipo seleccion)
+{
+    nodoEquipo* nuevo = (nodoEquipo*)malloc(sizeof(nodoEquipo));
+    nuevo->equipo = seleccion;
+    nuevo->siguiente = NULL;
+
+    return nuevo;
+}
+
+nodoGrupoEquipo* crearNodoGrupoEquipo(Equipo* seleccion)
+{
+    nodoGrupoEquipo* nuevo = (nodoGrupoEquipo*)malloc(sizeof(nodoGrupoEquipo));
+    nuevo->equipo =seleccion;
+    nuevo->siguiente = NULL;
+
+    return nuevo;
+}
+
+void insertarAlFinal(nodoEquipo** listaEquipos, Equipo seleccion)
+{
+    nodoEquipo* nuevo = crearNodoEquipo(seleccion);
+    nodoEquipo* seg;
+    if(*listaEquipos == NULL)
+    {
+        *listaEquipos=nuevo;
+    }
+    else
+    {
+        seg=*listaEquipos;
+        while(seg->siguiente != NULL)
+        {
+            seg=seg->siguiente;
+        }
+        seg->siguiente=nuevo;
+    }
+}
+
+void insertarAlFinalGrupo(nodoGrupoEquipo** listaEquipos, Equipo* seleccion)
+{
+    nodoGrupoEquipo* nuevo = crearNodoGrupoEquipo(seleccion);
+    nodoGrupoEquipo* seg;
+    if(*listaEquipos == NULL)
+    {
+        *listaEquipos=nuevo;
+    }
+    else
+    {
+        seg=*listaEquipos;
+        while(seg->siguiente != NULL)
+        {
+            seg=seg->siguiente;
+        }
+        seg->siguiente=nuevo;
+    }
+}
+
+
+void cargarLista(nodoEquipo** listaEquipos)
+{
+    FILE* fp;
+    fp = fopen("Equipos.bin","rb");
+    Equipo equipo;
+    if(fp)
+    {
+        while(fread(&equipo,sizeof(Equipo),1,fp) > 0)
+        {
+            insertarAlFinal(listaEquipos,equipo);
+        }
+    }
+}
+
+void mostrarEquipo(Equipo equipo)
+{
+    printf("Equipo: %s\n",equipo.nomEquipo);
+    printf("Partidos jugados: %d\n",equipo.mp);
+    printf("Goles a favor: %d\n",equipo.gf);
+    printf("Goles en contra: %d\n",equipo.ga);
+    printf("Partidos ganados: %d\n",equipo.win);
+    printf("Partidos perdidos: %d\n",equipo.loss);
+    printf("Puntos totales: %d\n",equipo.pts);
+    printf("\n");
+}
+
+void mostrarGrupoEquipo(Equipo* equipo)
+{
+    printf("Equipo: %s\n",equipo->nomEquipo);
+    printf("Partidos jugados: %d\n",equipo->mp);
+    printf("Goles a favor: %d\n",equipo->gf);
+    printf("Goles en contra: %d\n",equipo->ga);
+    printf("Partidos ganados: %d\n",equipo->win);
+    printf("Partidos perdidos: %d\n",equipo->loss);
+    printf("Puntos totales: %d\n",equipo->pts);
+    printf("\n");
+}
+
+void mostrarLista(nodoEquipo* listaSelecciones)
+{
+    while(listaSelecciones != NULL)
+    {
+        mostrarEquipo(listaSelecciones->equipo);
+        listaSelecciones= listaSelecciones->siguiente;
+    }
+}
+
+void cargarGrupos(Grupo grupos[],nodoEquipo* lista,int validos)
+{
+    int i=0,j=0;
+    char letra = 'A';
+    while(lista != NULL)
+    {
+        grupos[j].letra = letra;
+        while(i < validos)
+        {
+            insertarAlFinalGrupo(&grupos[j].equipos,&lista->equipo);
+            lista=lista->siguiente;
+            i++;
+        }
+        i=0;
+        letra=letra+1;
+        j++;
+    }
+}
+
+void mostrarIndice(nodoGrupoEquipo* lista,int i)
+{
+    Equipo* seleccion;
+    seleccion = lista->equipo;
+    mostrarGrupoEquipo(seleccion);
+    lista=lista->siguiente;
+}
+
+void mostrarArreglo(Grupo grupos[])
+{
+    nodoGrupoEquipo* aux;
+    for(int i=0; i<8; i++)
+    {
+        aux=grupos[i].equipos;
+        printf("Grupo %c:\n",grupos[i].letra);
+        for(int j=0; j<4; j++)
+        {
+            mostrarIndice(aux,i);
+            aux=aux->siguiente;
+        }
+    }
+}
+
+nodoPartido* crearNodoPartido(Partido dato)
+{
+    nodoPartido* nuevo = (nodoPartido*)malloc(sizeof(nodoPartido));
+    nuevo->partido = dato;
+    nuevo->siguiente = NULL;
+
+    return nuevo;
+}
+
+nodoPartido* crearPartidoFaseDeGrupos1(nodoGrupoEquipo* equipo1, nodoGrupoEquipo* equipo2, int fecha)
+{
+    Partido nuevo;
+    nuevo.equipo1 = equipo1->equipo;
+    nuevo.equipo2 = equipo2->equipo;
+    nuevo.golesEq1 = rand()%7;
+    nuevo.golesEq2 = rand()%7;
+    nuevo.fecha = fecha;
+    nodoPartido* partNuevo = crearNodoPartido(nuevo);
+
+    return partNuevo;
+}
+nodoPartido* crearPartidoFaseDeGrupos2(nodoGrupoEquipo* equipo1, nodoGrupoEquipo* equipo2, int fecha,char equipo[],char clasifica)
+{
+    Partido nuevo;
+    nuevo.equipo1 = equipo1->equipo;
+    nuevo.equipo2 = equipo2->equipo;
+    if(strcmpi((*nuevo.equipo1).nomEquipo, equipo) == 0 || strcmpi((*nuevo.equipo2).nomEquipo, equipo) == 0)
+    {
+        if(clasifica == 's')
+        {
+        if(strcmpi((*nuevo.equipo1).nomEquipo, equipo) == 0)
+        {
+            nuevo.golesEq1 = rand()%2+5;
+            nuevo.golesEq2 = rand()%4;
+        }
+        else if(strcmpi((*nuevo.equipo2).nomEquipo, equipo) == 0)
+        {
+            nuevo.golesEq2 = rand()%2+5;
+            nuevo.golesEq1= rand()%4;
+        }
+        }
+        else
+        {
+          if(strcmpi((*nuevo.equipo1).nomEquipo, equipo) == 0)
+        {
+            nuevo.golesEq1 = 0;
+            nuevo.golesEq2 = rand()%4;
+        }
+        else if(strcmpi((*nuevo.equipo2).nomEquipo, equipo) == 0)
+        {
+            nuevo.golesEq2 = 0;
+            nuevo.golesEq1= rand()%4;
+        }
+        }
+    }
+    else
+    {
+        nuevo.golesEq1 = rand()%7;
+        nuevo.golesEq2 = rand()%7;
+
+    }
+    nuevo.fecha = fecha;
+    nodoPartido* partNuevo = crearNodoPartido(nuevo);
+
+    return partNuevo;
+}
+
+void insertarAlFinalPartidos(nodoPartido** listaPartidos, nodoPartido* nuevo)
+{
+    nodoPartido* seg;
+    if(*listaPartidos == NULL)
+    {
+        *listaPartidos=nuevo;
+    }
+    else
+    {
+        seg=*listaPartidos;
+        while(seg->siguiente != NULL)
+        {
+            seg=seg->siguiente;
+        }
+        seg->siguiente=nuevo;
+    }
+}
+
+void jugarPartidosFaseDeGrupos1(Grupo grupos[], GrupoPartido partidosFaseDeGrupos[])
+{
+    char letra = 'A';
+    nodoGrupoEquipo* equipo1, *equipo2;
+    int fecha= 1;
+    for(int i = 0; i<8; i++)
+    {
+        equipo1 = grupos[i].equipos;
+        while(equipo1 != NULL)
+        {
+            fecha = 1;
+            equipo2 = equipo1->siguiente;
+            while(equipo2 != NULL)
+            {
+                nodoPartido* nuevo = crearPartidoFaseDeGrupos1(equipo1, equipo2, fecha);
+                insertarAlFinalPartidos(&partidosFaseDeGrupos[i].partidos, nuevo);
+                equipo2 = equipo2->siguiente;
+                fecha++;
+            }
+            equipo1 = equipo1->siguiente;
+        }
+
+    }
+    letra = letra + 1;
+}
+
+void jugarPartidosFaseDeGrupos2(Grupo grupos[], GrupoPartido partidosFaseDeGrupos[],char nombre[],char clasifica)
+{
+    char letra = 'A';
+    nodoGrupoEquipo* equipo1, *equipo2;
+    int fecha= 1;
+    for(int i = 0; i<8; i++)
+    {
+        equipo1 = grupos[i].equipos;
+        while(equipo1 != NULL)
+        {
+            fecha = 1;
+            equipo2 = equipo1->siguiente;
+            while(equipo2 != NULL)
+            {
+                nodoPartido* nuevo = crearPartidoFaseDeGrupos2(equipo1, equipo2, fecha, nombre,clasifica);
+                insertarAlFinalPartidos(&partidosFaseDeGrupos[i].partidos, nuevo);
+                equipo2 = equipo2->siguiente;
+                fecha++;
+            }
+            equipo1 = equipo1->siguiente;
+        }
+
+    }
+    letra = letra + 1;
+}
+
+void mostrarPartido(Partido mostrar)
+{
+    printf("jornada: %i\n", mostrar.fecha);
+    printf("%s %i ", mostrar.equipo1->nomEquipo, mostrar.golesEq1);
+    printf("- ");
+    printf("%i %s\n\n", mostrar.golesEq2, mostrar.equipo2->nomEquipo);
+
+}
+
+void mostrarPartidosGrupos(GrupoPartido partidosFaseDeGrupos[])
+{
+    nodoPartido* seg;
+    char letra = 'A';
+    for(int i=0; i<8; i++)
+    {
+        seg = partidosFaseDeGrupos[i].partidos;
+        printf("Grupo %c\n\n", letra);
+        while(seg != NULL)
+        {
+            mostrarPartido(seg->partido);
+            seg = seg->siguiente;
+        }
+        letra = letra + 1;
+    }
+}
+
+
+void actualizarGrupoAux(Partido part)
+{
+    (*part.equipo1).mp = (*part.equipo1).mp + 1;
+    (*part.equipo2).mp = (*part.equipo2).mp + 1;
+    (*part.equipo1).gf = (*part.equipo1).gf + part.golesEq1;
+    (*part.equipo2).gf = (*part.equipo2).gf + part.golesEq2;
+    (*part.equipo1).ga = (*part.equipo1).ga + part.golesEq2;
+    (*part.equipo2).ga = (*part.equipo2).ga + part.golesEq1;
+    if(part.golesEq1 > part.golesEq2)
+    {
+        (*part.equipo1).win = (*part.equipo1).win + 1;
+        (*part.equipo1).pts = (*part.equipo1).pts + 3;
+        (*part.equipo2).loss = (*part.equipo2).loss + 1;
+    }
+    else if(part.golesEq1 == part.golesEq2)
+    {
+        (*part.equipo1).pts = (*part.equipo1).pts + 1;
+        (*part.equipo2).pts = (*part.equipo2).pts + 1;
+    }
+    else
+    {
+        (*part.equipo2).win = (*part.equipo2).win + 1;
+        (*part.equipo2).pts = (*part.equipo2).pts + 3;
+        (*part.equipo1).loss = (*part.equipo1).loss + 1;
+    }
+}
+
+void actualizarGrupo(GrupoPartido partidosFaseDeGrupos[])
+{
+    nodoPartido* seg;
+    for(int i = 0; i < 8; i++)
+    {
+        seg = partidosFaseDeGrupos[i].partidos;
+        while(seg != NULL)
+        {
+            actualizarGrupoAux(seg->partido);
+            seg = seg->siguiente;
+        }
+    }
+}
+
+void insertarOrdenado(nodoGrupoEquipo** lista, Equipo* seleccion)
+{
+    nodoGrupoEquipo* nuevo = crearNodoGrupoEquipo(seleccion);
+    nodoGrupoEquipo* seg,*ante;
+    if(*lista == NULL)
+    {
+        *lista = nuevo;
+    }
+    else
+    {
+        if((*seleccion).pts > (*(*lista)->equipo).pts)
+        {
+            nuevo->siguiente=*lista;
+            *lista=nuevo;
+        }
+        else
+        {
+            ante=*lista;
+            seg=(*lista)->siguiente;
+            while(seg != NULL && nuevo->equipo->pts < seg->equipo->pts)
+            {
+                ante=seg;
+                seg=seg->siguiente;
+            }
+            if(seg != NULL)
+            {
+                if(nuevo->equipo->pts != seg->equipo->pts)
+                {
+                    ante->siguiente=nuevo;
+                    nuevo->siguiente=seg;
+                }
+                else
+                {
+                    if(nuevo->equipo->gf > seg->equipo->gf)
+                    {
+                        ante->siguiente=nuevo;
+                        nuevo->siguiente=seg;
+                    }
+                    else
+                    {
+                        ante=seg;
+                        seg=seg->siguiente;
+                        ante->siguiente=nuevo;
+                        nuevo->siguiente=seg;
+                    }
+                }
+
+            }
+            else
+            {
+                ante->siguiente=nuevo;
+                nuevo->siguiente=seg;
+            }
+        }
+    }
+}
+
+void averiguar1y2(Grupo grupo[],Grupo grupoFinal[])
+{
+    char letra = 'A';
+    nodoGrupoEquipo* seg;
+    for(int i=0; i<8; i++)
+    {
+        grupoFinal[i].letra = letra;
+        seg=grupo[i].equipos;
+        for(int j=0; j<4; j++)
+        {
+            insertarOrdenado(&grupoFinal[i].equipos,seg->equipo);
+            seg=seg->siguiente;
+        }
+        letra = letra + 1;
+    }
+}
+
+void mostrarClasificados(Grupo grupo[])
+{
+    int letra = 'A';
+    nodoGrupoEquipo* seg;
+    for(int i=0; i<8; i++)
+    {
+        seg=grupo[i].equipos;
+        printf("Clasificados del grupo %c:\n",letra);
+        for(int j=0; j<2; j++)
+        {
+            printf("%s\n",seg->equipo->nomEquipo);
+            seg=seg->siguiente;
+        }
+        letra=letra+1;
+    }
+    printf("\n");
+}
+
+void mostrarPartidoFases(Partido mostrar)
+{
+    printf("%s %i ", mostrar.equipo1->nomEquipo, mostrar.golesEq1);
+    printf("- ");
+    printf("%i %s\n", mostrar.golesEq2, mostrar.equipo2->nomEquipo);
+    if(mostrar.penales1 != 0 || mostrar.penales2 !=0)
+    {
+        printf("Penales : ");
+        printf("%i    -    ", mostrar.penales1);
+        printf("%i", mostrar.penales2);
+
+    }
+    printf("\n\n");
+
+}
+
+nodoPartido* crearPartidoFases(nodoGrupoEquipo* equipo1, nodoGrupoEquipo* equipo2)
+{
+    Partido nuevo;
+    nuevo.equipo1 = equipo1->equipo;
+    nuevo.equipo2 = equipo2->equipo;
+    nuevo.golesEq1 = rand()%7;
+    nuevo.golesEq2 = rand()%7;
+    if(nuevo.golesEq1 == nuevo.golesEq2)
+    {
+        nuevo.penales1 = rand()%5;
+        nuevo.penales2 = rand()%5;
+        while(nuevo.penales1 == nuevo.penales2)
+        {
+            nuevo.penales1 = rand()%5;
+            nuevo.penales2 = rand()%5;
+        }
+    }
+    else
+    {
+        nuevo.penales1 = 0;
+        nuevo.penales2 = 0;
+    }
+    nodoPartido* partNuevo = crearNodoPartido(nuevo);
+
+    return partNuevo;
+}
+
+
+void crearCrucesOctavos(Grupo grupoFinal[], fase fases[])
+{
+    nodoPartido* nuevo;
+    fases[0].idFase = 1;
+    for(int i = 0; i < 8;)
+    {
+        int j = i + 1;
+        nuevo = crearPartidoFases(grupoFinal[i].equipos, grupoFinal[j].equipos->siguiente);
+        insertarAlFinalPartidos(&fases[0].partidos,nuevo);
+        i = i + 2;
+    }
+        for(int i = 0; i < 8;)
+    {
+        int j = i + 1;
+        nuevo = crearPartidoFases(grupoFinal[j].equipos, grupoFinal[i].equipos->siguiente);
+        insertarAlFinalPartidos(&fases[0].partidos,nuevo);
+        i = i + 2;
+    }
+}
+
+void crearCrucesCuartos(fase fases[])
+{
+    fases[1].idFase = 2;
+    nodoPartido* aux = fases[0].partidos;
+    nodoGrupoEquipo* equipo1,*equipo2;
+    nodoPartido* nuevo;
+    for(int i = 0;i < 4;i++)
+    {
+        if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+            else
+            {
+                equipo1= crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+        }
+        else
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        aux=aux->siguiente;
+         if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+            else
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+        }
+        else
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        nuevo = crearPartidoFases(equipo1,equipo2);
+        insertarAlFinalPartidos(&fases[1].partidos,nuevo);
+        aux=aux->siguiente;
+    }
+
+
+}
+
+void crearCrucesSemis(fase fases[])
+{
+    fases[2].idFase = 3;
+    nodoPartido* aux = fases[1].partidos;
+    nodoGrupoEquipo* equipo1,*equipo2;
+    nodoPartido* nuevo;
+    for(int i = 0;i < 2;i++)
+    {
+        if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+            else
+            {
+                equipo1= crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+        }
+        else
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        aux=aux->siguiente;
+         if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+            else
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+        }
+        else
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        nuevo = crearPartidoFases(equipo1,equipo2);
+        insertarAlFinalPartidos(&fases[2].partidos,nuevo);
+        aux=aux->siguiente;
+    }
+}
+
+void crearFinal(fase fases[])
+{
+    fases[3].idFase = 4;
+    fases[4].idFase = 5;
+    nodoPartido* aux = fases[2].partidos;
+    nodoGrupoEquipo* equipo1,*equipo2,*equipo3,*equipo4;
+    nodoPartido* partFinal,*terYcuar;
+     if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            equipo3 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo1 = crearNodoGrupoEquipo(aux->partido.equipo1);
+                equipo3 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+            else
+            {
+                equipo1= crearNodoGrupoEquipo(aux->partido.equipo2);
+                equipo3 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+        }
+        else
+        {
+            equipo1 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            equipo3 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        aux=aux->siguiente;
+         if(aux->partido.golesEq1 > aux->partido.golesEq2)
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            equipo4 = crearNodoGrupoEquipo(aux->partido.equipo2);
+        }
+        else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+        {
+            if(aux->partido.penales1 > aux->partido.penales2)
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo1);
+                equipo4 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            }
+            else
+            {
+                equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+                equipo4 = crearNodoGrupoEquipo(aux->partido.equipo1);
+            }
+        }
+        else
+        {
+            equipo2 = crearNodoGrupoEquipo(aux->partido.equipo2);
+            equipo4 = crearNodoGrupoEquipo(aux->partido.equipo1);
+        }
+        partFinal = crearPartidoFases(equipo1,equipo2);
+        terYcuar = crearPartidoFases(equipo3,equipo4);
+        insertarAlFinalPartidos(&fases[3].partidos,terYcuar);
+        insertarAlFinalPartidos(&fases[4].partidos,partFinal);
+}
+
+void verCampeon (fase fases[])
+{
+    nodoPartido* aux = fases[4].partidos;
+    if(aux->partido.golesEq1 > aux->partido.golesEq2)
+    {
+    printf("-----------------------\n");
+    printf("-                     -\n");
+    printf("-       CAMPEON       -\n");
+    printf("-        %s           -\n",aux->partido.equipo1->nomEquipo);
+    printf("-                     -\n");
+    printf("-----------------------\n");
+     printf("-----------------------\n");
+    printf("-                     -\n");
+    printf("-    SUBCAMPEON       -\n");
+    printf("-      %s             -\n",aux->partido.equipo2->nomEquipo);
+    printf("-                     -\n");
+    printf("-----------------------\n");
+    }
+    else if(aux->partido.golesEq1 == aux->partido.golesEq2)
+    {
+        if(aux->partido.penales1 > aux->partido.penales2)
+        {
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-       CAMPEON       -\n");
+            printf("-        %s           -\n",aux->partido.equipo1->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-    SUBCAMPEON       -\n");
+            printf("-      %s             -\n",aux->partido.equipo2->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+        }
+        else
+        {
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-       CAMPEON       -\n");
+            printf("-        %s           -\n",aux->partido.equipo2->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-    SUBCAMPEON       -\n");
+            printf("-      %s             -\n",aux->partido.equipo1->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+        }
+    }
+    else
+    {
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-       CAMPEON      -\n");
+            printf("-        %s           -\n",aux->partido.equipo2->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+            printf("-----------------------\n");
+            printf("-                     -\n");
+            printf("-    SUBCAMPEON       -\n");
+            printf("-      %s             -\n",aux->partido.equipo1->nomEquipo);
+            printf("-                     -\n");
+            printf("-----------------------\n");
+    }
+}
+
+void mostrarPartidosFases(fase fases[],int idFase)
+{
+        nodoPartido* seg;
+        for(int i = 0; i < 5; i++)
+        {
+            if(idFase == fases[i].idFase)
+            {
+                seg=fases[i].partidos;
+            }
+        }
+        while(seg != NULL)
+        {
+            mostrarPartidoFases(seg->partido);
+            seg = seg->siguiente;
+        }
+
+}
+
