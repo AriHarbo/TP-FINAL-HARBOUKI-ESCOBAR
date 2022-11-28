@@ -99,6 +99,8 @@ void crearCrucesCuartos(fase[]);
 void crearCrucesSemis(fase[]);
 void crearFinal(fase[]);
 void verCampeon (fase[]);
+void mostrarArbol(fase[]);
+
 
 int main()
 {
@@ -141,6 +143,7 @@ int main()
         printf("3.Realizar la simulacion de la fase de grupos y elegir un equipo para que pase o no\n");
         printf("4.Realizar la simulacion de la fase final\n");
         printf("5.Ver fases\n");
+        printf("6.Ver torneo en llaves\n");
         scanf("%i",&opcion);
     switch(opcion)
     {
@@ -252,6 +255,15 @@ int main()
             system ("PAUSE");
             system ("cls");
             break;
+            case 6:
+                if(fases[0].partidos == NULL)
+                {
+                    printf("Para ver las llaves de la fase final, primero debes simularla\n");
+                }
+                else
+                {
+                    mostrarArbol(fases);
+                }
     }
         system ("PAUSE");
         system ("cls");
@@ -1036,6 +1048,42 @@ void verCampeon (fase fases[])
     }
 }
 
+void mostrarArbol(fase fases[])
+{
+    nodoPartido* seg, *seg2, *seg3, *seg4;
+    seg = fases[0].partidos;
+    seg2 = fases[1].partidos;
+    seg3 = fases[2].partidos;
+    seg4 = fases[4].partidos;
+    printf("%.3s %i (%i)\n", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);
+    printf("%.3s %i (%i)\n", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;
+    printf("        |\n");
+    printf("        |-----------");printf("%.3s %i (%i)\n",(*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales1);
+    printf("        |");printf("           %.3s %i (%i)\n", (*seg2->partido.equipo2).nomEquipo, seg2->partido.golesEq2, seg2->partido.penales2);seg2 = seg2->siguiente;
+    printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                     |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |-----------");printf("%.3s %i (%i)\n", (*seg3->partido.equipo1).nomEquipo, seg3->partido.golesEq1, seg3->partido.penales1);
+    printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                     |");printf("           %.3s %i (%i)\n", (*seg3->partido.equipo2).nomEquipo, seg3->partido.golesEq2, seg3->partido.penales2);seg3 = seg3->siguiente;
+    printf("        |");printf("                     |");printf("                    |\n");
+    printf("        |-----------");printf("%.3s %i (%i)", (*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales1);printf("                      |\n");
+    printf("        |");printf("           %.3s %i (%i)", (*seg2->partido.equipo2).nomEquipo, seg2->partido.golesEq2, seg2->partido.penales2);seg2 = seg2->siguiente;printf("                      |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                                          |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                                          |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                                          |------------");printf("%.3s %i (%i)\n", (*seg4->partido.equipo1).nomEquipo, seg4->partido.golesEq1, seg4->partido.penales1);
+    printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                                          |");printf("            %.3s %i (%i)\n", (*seg4->partido.equipo2).nomEquipo, seg4->partido.golesEq2, seg4->partido.penales2);
+    printf("        |");printf("                                          |\n");
+    printf("        |-----------");printf("%.3s %i (%i)",(*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales1);printf("                      |\n");
+    printf("        |");printf("           %.3s %i (%i)",(*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales2);seg2 = seg2->siguiente;printf("                      |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |");printf("                    |\n");
+    printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                     |");printf("                    |\n");
+    printf("%.3s %i (%i)",(*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |-----------");printf("%.3s %i (%i)\n", (*seg3->partido.equipo1).nomEquipo, seg3->partido.golesEq1, seg3->partido.penales1);
+    printf("%.3s %i (%i)",(*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                     |");printf("           %.3s %i (%i)\n",  (*seg3->partido.equipo2).nomEquipo, seg3->partido.golesEq2, seg3->partido.penales2);
+    printf("        |");printf("                     |\n");
+    printf("        |-----------");printf("%.3s %i (%i)\n", (*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales1);
+    printf("        |");printf("           %.3s %i (%i)\n", (*seg2->partido.equipo2).nomEquipo, seg2->partido.golesEq2, seg2->partido.penales2);
+    printf("%.3s %i (%i)\n", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);
+    printf("%.3s %i (%i)\n", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);
+}
 void mostrarPartidosFases(fase fases[],int idFase)
 {
         nodoPartido* seg;
@@ -1053,4 +1101,3 @@ void mostrarPartidosFases(fase fases[],int idFase)
         }
 
 }
-
