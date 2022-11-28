@@ -64,10 +64,6 @@ typedef struct
     nodoPartido* partidos;
 } fase;
 
-/*
-void mostrarArchivo(Equipo);
-void cargarArchivo(Equipo);
-*/
 
 ///PROTOTIPADOS:
 void cargarLista(nodoEquipo**);
@@ -148,6 +144,7 @@ int main()
     switch(opcion)
     {
         case 1:
+            system ("cls");
             mostrarArreglo(grupo);
             system ("PAUSE");
             system ("cls");
@@ -159,6 +156,7 @@ int main()
             }
             else
             {
+            system ("cls");
             jugarPartidosFaseDeGrupos1(grupo, partidosFaseDeGrupos);
             mostrarPartidosGrupos(partidosFaseDeGrupos);
             actualizarGrupo(partidosFaseDeGrupos);
@@ -176,6 +174,7 @@ int main()
             {
             char nombre[TAM_MAX];
             char clasifica;
+            system ("cls");
             printf("Ingrese una seleccion:\n");
             fflush(stdin);
             gets(nombre);
@@ -193,10 +192,16 @@ int main()
         case 4:
         if(grupo[0].equipos->equipo->mp == 0)
         {
+            system ("cls");
             printf("Para simular la fase final, primero debes simular la fase de grupos.\n");
+        }
+        else if(grupoFinal[0].equipos != NULL)
+        {
+            printf("Ya se simulo la fase final\n");
         }
         else
         {
+            system ("cls");
         averiguar1y2(grupo,grupoFinal);
         mostrarClasificados(grupoFinal);
         crearCrucesOctavos(grupoFinal, fases);
@@ -210,11 +215,13 @@ int main()
         case 5:
             if(fases[0].partidos == NULL)
             {
+                system ("cls");
                 printf("Para ver la fase final, primero debes simularla\n");
             }
             else
             {
             int fase;
+            system ("cls");
             printf("Ingrese que fase quiere ver:\n");
             printf("1.Octavos\n");
             printf("2.Cuartos\n");
@@ -222,6 +229,7 @@ int main()
             printf("4.Tercer y cuarto puesto\n");
             printf("5.Final\n");
             scanf("%d",&fase);
+            system ("cls");
             switch(fase)
             {
             case 1:
@@ -256,54 +264,28 @@ int main()
             system ("cls");
             break;
             case 6:
+                system("cls");
                 if(fases[0].partidos == NULL)
                 {
+                    system ("cls");
                     printf("Para ver las llaves de la fase final, primero debes simularla\n");
                 }
                 else
                 {
                     mostrarArbol(fases);
                 }
+                system ("PAUSE");
+                system ("cls");
+            default:
+                printf("Opcion incorrecta\n");
+                system ("PAUSE");
+                system ("cls");
     }
         system ("PAUSE");
         system ("cls");
     }
     return 0;
 }
-
-/*
-void mostrarArchivo(Equipo equipo)
-{
-    FILE* fp = fopen("Equipos.bin","rb");
-    if(fp)
-    {
-        while(fread(&equipo,sizeof(Equipo),1,fp) > 0)
-        {
-            printf("Equipo: %s\n",equipo.nomEquipo);
-            printf("Partidos jugados: %d\n",equipo.mp);
-            printf("Goles a favor: %d\n",equipo.gf);
-            printf("Goles en contra: %d\n",equipo.ga);
-            printf("Partidos ganados: %d\n",equipo.win);
-            printf("Partidos perdidos: %d\n",equipo.loss);
-            printf("Puntos totales: %d\n",equipo.pts);
-            printf("\n");
-        }
-    }
-}
-
-void cargarArchivo(Equipo equipo)
-{
-    FILE* fp = fopen("Equipos.bin","ab");
-    strcpy(equipo.nomEquipo,"Corea");
-    equipo.ga=0;
-    equipo.gf=0;
-    equipo.loss=0;
-    equipo.mp=0;
-    equipo.pts=0;
-    equipo.win=0;
-    fwrite(&equipo,sizeof(Equipo),1,fp);
-}
-*/
 
 nodoEquipo* crearNodoEquipo(Equipo seleccion)
 {
@@ -743,6 +725,7 @@ void mostrarClasificados(Grupo grupo[])
             printf("%s\n",seg->equipo->nomEquipo);
             seg=seg->siguiente;
         }
+        printf("-----------------\n");
         letra=letra+1;
     }
     printf("\n");
@@ -1073,7 +1056,7 @@ void mostrarArbol(fase fases[])
     printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                                          |");printf("            %.3s %i (%i)\n", (*seg4->partido.equipo2).nomEquipo, seg4->partido.golesEq2, seg4->partido.penales2);
     printf("        |");printf("                                          |\n");
     printf("        |-----------");printf("%.3s %i (%i)",(*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales1);printf("                      |\n");
-    printf("        |");printf("           %.3s %i (%i)",(*seg2->partido.equipo1).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales2);seg2 = seg2->siguiente;printf("                      |\n");
+    printf("        |");printf("           %.3s %i (%i)",(*seg2->partido.equipo2).nomEquipo, seg2->partido.golesEq1, seg2->partido.penales2);seg2 = seg2->siguiente;printf("                      |\n");
     printf("%.3s %i (%i)", (*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |");printf("                    |\n");
     printf("%.3s %i (%i)", (*seg->partido.equipo2).nomEquipo, seg->partido.golesEq2, seg->partido.penales2);seg = seg->siguiente;printf("                     |");printf("                    |\n");
     printf("%.3s %i (%i)",(*seg->partido.equipo1).nomEquipo, seg->partido.golesEq1, seg->partido.penales1);printf("                     |-----------");printf("%.3s %i (%i)\n", (*seg3->partido.equipo1).nomEquipo, seg3->partido.golesEq1, seg3->partido.penales1);
@@ -1101,3 +1084,4 @@ void mostrarPartidosFases(fase fases[],int idFase)
         }
 
 }
+
